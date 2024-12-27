@@ -2,6 +2,9 @@
 
 In this **DevOps project**, I demonstrate how to **deploy a ZOMATO Clone App** using a variety of modern DevOps tools and services.
 
+![image](https://github.com/user-attachments/assets/231da473-461e-4131-b725-011448f24196)
+
+
 ## 🛠️ Tools & Services Used:
 
 1. **GitHub** ![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)
