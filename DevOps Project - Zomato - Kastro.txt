@@ -74,23 +74,38 @@ Verifiy Trivy installation: trivy --version
 
 8. Install Docker Scout
 Make sure to Login to DockerHub account in browser
-<Follow the process as explained in the video>
+
+Goto MobaXTerm terminal -> Login to Dockerhub --> docker login -u <DockerHub_Username> -> enter password
+
+Lets install the Docker Scout 
+curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh |sh -s --b /usr/local/bin
+Give Permission to DockerScout to execut the file
+sudo chmod 777 /var/run/docker.sock
 
 9. Install SonarQube using Docker
 $ docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
 $ docker ps (You can see SonarQube container)
 
-<Follow the process as explained in the video>
+Security group -> add 9000 port for sonarqube
+ip:9000 (chrome)
+admin , admin
+
 
 10. Installation of Plugins in Jenkins
 Install below plugins:
-<Follow the process as explained in the video>
+pipeline: stage view , Eclipse Termurin installer , sonarqube scanner , Docker ,
+Docker commons , Docker Pipeline , Docker API , docker-build-step , email extension template
+OWASP Dependency-Check , NodeJS , Prometheus metrics => install
+you will see error while installing prometheus plugin. Read error msg. Here need to restart jenkins
+check the below box "Go back to the top of page" to restart jenkins
 
 11. SonarQube configuration in Jenkins
-<Follow the process as explained in the video>
+Before configuring SonarQube in jenkins , we need to generate a SoanrQube token to establish a connection b/w jenkins and SonarQube.
+Goto SonarQube console console => Administrator(top pane) -> 'Security' drop down -> users -> 3 dots -> Generate token (name : jenkins)
+
 
 11.1. Tools Configuration in Jenkins
-<Follow the process as explained in the video>
+Manage Jenkins ->  System configuration
 
 11.2. Configuration of SonarQube Token in Jenkins
 <Follow the process as explained in the video>
