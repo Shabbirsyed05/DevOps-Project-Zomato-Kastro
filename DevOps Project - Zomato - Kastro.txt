@@ -105,24 +105,49 @@ Goto SonarQube console console => Administrator(top pane) -> 'Security' drop dow
 
 
 11.1. Tools Configuration in Jenkins
-Manage Jenkins ->  System configuration
+Manage Jenkins ->  System configuration -> tools =>
+JDK => name (jdk17) , check install automatically ->Install from adoptium.net , jdk-17.0.8.1+1
+SoanrQube Scanner Installation => name (sonar-scanner) , version (latest version : 6.2.0.4610)
+Node JS => name (node23) , version (latest : nodeJS 23.1.0) 
+Dependency check => nme (DP-check) , automatcially -> install from Github.com (select latest version : 10.0.4)
+Docker => name (docker) , automatcially -> Download from docker.com , version (latest)
 
 11.2. Configuration of SonarQube Token in Jenkins
-<Follow the process as explained in the video>
+Manage Jenkins -> Security -> Credentials -> global =>
+kind (secret text) , secret (sonarqube_token) , id (sonar-token)
+kind (username and password) , username (docker_username) , password (docker_token/pass) , iD (docker)
+
+Gmail -> Manage account -> app password -> app name (jenkins) , copy jenkins password
+kind (username and password) , username (email) , password (app_pass) , ID (email-creds)
+
 
 Lets create another credentials for DockerHub. This is being done because, as soon as the docker image is created, it should get pushed to dockerhub. 
 <Follow the process as explained in the video>
 
 11.3 Configuration of Email notification in Jenkins
 As soon as the build happens, i need to get an email notification to do that we have to configure our email.
-<Follow the process as explained in the video>
 
 
 12. System Configuration in Jenkins
-<Follow the process as explained in the video>
+Manage Jenkins -> System -> SonarQube Server =>
+name (sonar-server) , url (https://sonar:9000) , server authentication token (sonar-token (from dropdown))
+
+Manage Jenkins -> System -> Extended E-mail Notifications =>
+SMTP server (smtp.gmail.com) , smtp port (465) , Advanced =>
+credentials (from dropdown -> select email-creds) , tick (use SSL, Use OAuth 2.0)
+
+Manage Jenkins -> System -> E-mail Notifications =>
+SMTP server (smtp.gmail.com) -> Advanced =>
+'tick' use SMTP Authentication => username (email) , password (app_password) , tick (USE SSL) ,
+SMTP port (465) ,reply-to address (email) , tick (test configuration by sending test e mail) =>
+test e-amil recipient (email) -> test configuration
+
+CTRL + F -> Default triggers -> tick (Always , Failure - Any , Success)
+check email -> did u got mail or not
 
 13. Create webhook in SonarQube
-<Follow the process as explained in the video>
+SonarQube Dashboard -> Administration -> Configuration -> webhooks => create
+name (jenkins) , url (http:jenkins_ip:8080/sonarqube-webhook/)
 
 14. Create Pipeline Job
 Before pasting the pipeline script, do the following changes in the script
@@ -251,9 +276,14 @@ stage('OWASP FS SCAN') {
     }
 }
 
-
+=========
+security group => open poert 3000
+ip:3000 (zomato website will be opened) (as we opened 3000 in dockerfile)
+if run the pipeline for  2nd time -> it will fail(deploy the container) becauseport 3000 is already allocated. So stop and delete the container.
 Let the pipeline gets built. Meanwhile we will create VMs for monitoring.
 
+Part 2 : Kubernetes Deployment
+pre-requisites for this part : Configure kubctl, eksctl and other required tools
 ------------------------------------------------------------
 MONITORING OF APPLICATION
 ------------------------------------------------------------
@@ -326,7 +356,7 @@ sudo systemctl status prometheus
 
 Press Control+c to come out
 
-Access Prometheus in browser using your server's IP and port 9090:
+Access Prometheus in browser using your server's IP and port 9090(open 9090 in security group of monitoring server):
 http://<your-server-ip>:9090
 
 If it doesn't work, in the web link of browser, remove 's' in 'https'. Keep only 'http' and now you will be able to see.
@@ -475,7 +505,12 @@ You will see the Grafana dashboard
 The first thing that we have to do in Grafana is to add the data source
 Lets add the data source;
 
-<Follow the process as explained in the video>
+You can click on "connections" in the left pane or click on "data sources" in the window to add the dat sourc.
+Data sources -> select prometheus -> enable "default" toggle bar -> connections: paste prometheus url -> remove / at the end of the url -> save and test -> If everything fine , u will see "green" clolor tick mark
+Google -> grafana node exporteer dashborad and copy the code (1860)
+
+Granafana -> Connections -> Dashboard ->  + -> import dashboard -> paste code (1860) -> load -> select prometheus -> Import 
+Granafana -> Connections -> Dashboard ->  + -> import dashboard -> paste code (9964) -> load -> select prometheus -> Import
 
 Click on Dashboards in the left pane, you can see both the dashboards you have just added.
 
@@ -487,6 +522,8 @@ We need to run the same application on K8S cluster. In order to do that we need 
 Note 1: You might get errors while executing the below commands. Make sure to do the required configurations  eksctl, kubectl, and other tools.
 Note 2: Run the VS Code Editor/Power Shell/Command Prompt as Administrator, to avoid errors.
 
+IAM -> Users -> k8s -> administrator access => security -> get access key and securoty keys
+aws configure -> region (ap-northeast-1)
 Open vs code editor and execute the below commands; 
 Step 01: Create EKS Cluster using eksctl
 # Create Cluster. I will keep the cluster name as "kastrocluster"
@@ -521,6 +558,8 @@ Once the cluster is ready, you will see "EKS Cluster "kastrocluster" in "us-east
 # Get List of clusters
 eksctl get cluster
 
+AWS => EKS -> CLusters -> kastrocluster (can be seen)
+AWS => Cloudformation -> Stacks -> eksctl-kastro- cluster (can be seen)
 Execute the below in vs code editor;
 
 Step 02: Create & Associate IAM OIDC Provider for our EKS Cluster
@@ -561,7 +600,7 @@ eksctl create nodegroup --cluster=kastrocluster \
                        --nodes-max=4 \
                        --node-volume-size=20 \
                        --ssh-access \
-                       --ssh-public-key=Prajwal \
+                       --ssh-public-key=<key_name> \
                        --managed \
                        --asg-access \
                        --external-dns-access \
@@ -592,6 +631,7 @@ eksctl create nodegroup --cluster=kastrocluster `
 
 Step 05: Verify Cluster & Nodes
 Goto EKS Service in AWS and check for the cluster creation
+AWS -> EKS -> Cluster -> kastrocluster -> compute (here nodes and node groups can be seen)
 
 ******************************************
 Optional - do it at the end of complete demo
@@ -695,7 +735,12 @@ echo $env:ARGO_PWD
 
 You will see the password. copy and paste it in the argo cd homepage --->login
 
-<Follow the process as explained in the video>
+Aego CD Homepage =>
+Repositories -> Connect repo using httpa =>
+type : git , project : default , URL : <github_URL_of_Zomato_project> -> conenct -> u can see conenctions status as successful.
+
+ARGOCD homepage -> Manage your apps and diagnose health problems(left pane) -> new app =>
+app name (zomato)(application name should be in smmall lettes) , project Name (default) , Sync Policy (Automatic) , Repo URL : <github_URL_of_Zomato_project> , Reavision (HEAD) , Path (Give the name of kubernetes folder in zomato Project repo (Kubernetes)) , Cluster URL : (select from drop down) , Namespace (default) -> create -> wait till u see the status to complete (it will take 5-10 min)
 
 Note: In the repo, in Kubernetes folder, in the deployment.yml file, in the containers section change the dockerhub username
 
@@ -722,6 +767,26 @@ Copy the public ip of "nodeIP" which we have done exactly 4 steps above this lin
 Note: If you see error in Prometheus under "k8s", open port number 9100 for the EC2 instances which were created as part of EKS cluster i.e nodes
 
 After everything is done. Delete everything. Make sure to delete the Cloud Formation Stacks.
+
+******************************************
+Optional - do it at the end of complete demo
+******************************************
+Step 06: Delete Node Group
+# List EKS Clusters
+eksctl get clusters
+
+# Capture Node Group name
+eksctl get nodegroup --cluster=<clusterName>
+eksctl get nodegroup --cluster=kastrocluster
+
+# Delete Node Group
+eksctl delete nodegroup --cluster=<clusterName> --name=<nodegroupName>
+eksctl delete nodegroup --cluster=kastrocluster --name=kastrodemo-ng-public1
+
+Step 07: Delete Cluster
+# Delete Cluster
+eksctl delete cluster <clusterName>
+eksctl delete cluster kastrocluster
 
 ========================================================================================================
 Kind Request:
