@@ -3,8 +3,17 @@ Deployment of ZOMATO Project
 --------------------------------------------
 Repo URL: https://github.com/KastroVKiran/DevOps-Project-Zomato-Kastro.git
 
+ports used :
+https 443
+http  80
+ssh   22
+jenkins 8080
+prometheus 9090
+soanrqube 9000
+node exporter port 9100 (if promethus and grafana need to work)
+app and grafana port 3000
 
-1. Launch an Instance (Ubuntu, 24.04, t2.large, 30 GB)
+1. Launch an Instance (Ubuntu, 24.04, t2.large, 30 GB) (Zomato Server) (tokyo)
 
 2. Connect to the instance
 
@@ -78,7 +87,7 @@ Make sure to Login to DockerHub account in browser
 Goto MobaXTerm terminal -> Login to Dockerhub --> docker login -u <DockerHub_Username> -> enter password
 
 Lets install the Docker Scout 
-curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh |sh -s --b /usr/local/bin
+curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s -- -b /usr/local/bin
 Give Permission to DockerScout to execut the file
 sudo chmod 777 /var/run/docker.sock
 
@@ -93,9 +102,12 @@ admin , admin
 
 10. Installation of Plugins in Jenkins
 Install below plugins:
-pipeline: stage view , Eclipse Termurin installer , sonarqube scanner , Docker ,
-Docker commons , Docker Pipeline , Docker API , docker-build-step , email extension template
-OWASP Dependency-Check , NodeJS , Prometheus metrics => install
+pipeline: stage view ,
+Eclipse Termurin installer , sonarqube scanner ,
+Docker , Docker commons , Docker Pipeline , Docker API , docker-build-step , 
+email extension template
+OWASP Dependency-Check , NodeJS ,
+Prometheus metrics => install
 you will see error while installing prometheus plugin. Read error msg. Here need to restart jenkins
 check the below box "Go back to the top of page" to restart jenkins
 
@@ -134,7 +146,7 @@ name (sonar-server) , url (https://sonar:9000) , server authentication token (so
 
 Manage Jenkins -> System -> Extended E-mail Notifications =>
 SMTP server (smtp.gmail.com) , smtp port (465) , Advanced =>
-credentials (from dropdown -> select email-creds) , tick (use SSL, Use OAuth 2.0)
+credentials (from dropdown -> select (email-creds) , tick (use SSL, Use OAuth 2.0)
 
 Manage Jenkins -> System -> E-mail Notifications =>
 SMTP server (smtp.gmail.com) -> Advanced =>
@@ -174,7 +186,7 @@ pipeline {
         }
         stage ("Git Checkout") {
             steps {
-                git 'https://github.com/KastroVKiran/Zomato-Project-Kastro.git'
+                git 'https://github.com/Shabbirsyed05/DevOps-Project-Zomato-Kastro.git'
             }
         }
         stage("Sonarqube Analysis"){
@@ -217,8 +229,8 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker') {
-                        sh "docker tag zomato kastrov/zomato:latest "
-                        sh "docker push kastrov/zomato:latest "
+                        sh "docker tag zomato shabbirsyed103/zomato:latest "
+                        sh "docker push shabbirsyed103/zomato:latest "
                     }
                 }
             }
@@ -227,16 +239,16 @@ pipeline {
             steps {
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){
-                       sh 'docker-scout quickview kastrov/zomato:latest'
-                       sh 'docker-scout cves kastrov/zomato:latest'
-                       sh 'docker-scout recommendations kastrov/zomato:latest'
+                       sh 'docker-scout quickview shabbirsyed103/zomato:latest'
+                       sh 'docker-scout cves shabbirsyed103/zomato:latest'
+                       sh 'docker-scout recommendations shabbirsyed103/zomato:latest'
                    }
                 }
             }
         }
         stage ("Deploy to Container") {
             steps {
-                sh 'docker run -d --name zomato -p 3000:3000 kastrov/zomato:latest'
+                sh 'docker run -d --name zomato -p 3000:3000 shabbirsyed103/zomato:latest'
             }
         }
     }
@@ -277,7 +289,7 @@ stage('OWASP FS SCAN') {
 }
 
 =========
-security group => open poert 3000
+security group => open port 3000
 ip:3000 (zomato website will be opened) (as we opened 3000 in dockerfile)
 if run the pipeline for  2nd time -> it will fail(deploy the container) becauseport 3000 is already allocated. So stop and delete the container.
 Let the pipeline gets built. Meanwhile we will create VMs for monitoring.
@@ -735,8 +747,8 @@ echo $env:ARGO_PWD
 
 You will see the password. copy and paste it in the argo cd homepage --->login
 
-Aego CD Homepage =>
-Repositories -> Connect repo using httpa =>
+Argo CD Homepage =>
+Manage your Repositories -> Repositories Connect repo using https =>
 type : git , project : default , URL : <github_URL_of_Zomato_project> -> conenct -> u can see conenctions status as successful.
 
 ARGOCD homepage -> Manage your apps and diagnose health problems(left pane) -> new app =>
@@ -754,7 +766,9 @@ sudo vi /etc/prometheus/prometheus.yml ----> Paste the below commands at the bot
     static_configs:
       - targets: ['nodeIP:9100']
 
-In the above, to get the "nodeIP", goto EKS in AWS ----> Click on EKS Cluster ----> "Compute" tab ----> Nodes ----> Click on any one node ----> Click on the "instance id" ----> Copy the public ip ----> Paste in the above script
+(ignore)In the above, to get the "nodeIP", goto EKS in AWS ----> Click on EKS Cluster ----> "Compute" tab ----> Nodes ----> Click on any one node ----> Click on the "instance id" ----> Copy the public ip ----> Paste in the above script
+
+AWS -> EC2 instance -> 2new ng (nodegroup) servers can be seen . copy IP_address of 1 IP
 
 The static_configs section specifies the targets to scrape metrics from, and in this case, it's set to nodeip:9001.
 
@@ -763,6 +777,8 @@ The static_configs section specifies the targets to scrape metrics from, and in 
 Goto Prometheus and reload. Goto ArgoCD and reload to see whether the pipeline is done or not
 
 Copy the public ip of "nodeIP" which we have done exactly 4 steps above this line ---> Goto browser and paste it:30001 ----> Make sure to open the port 30001 for the "nodeIP:" VM ----> You will see the application
+Note (open port 30001 for the nodegroup_server under ec2 instances . if website is not opening) (open port 9100 for k8s to come up in prometheus)(under security remote group of eks nodes)
+
 
 Note: If you see error in Prometheus under "k8s", open port number 9100 for the EC2 instances which were created as part of EKS cluster i.e nodes
 
