@@ -29,6 +29,7 @@ In this **DevOps project**, I demonstrate how to **deploy a ZOMATO Clone App** u
 
 ![image](https://github.com/user-attachments/assets/9e9c9805-5e1a-4ff8-8ff5-e75217801fb3)
 ![image](https://github.com/user-attachments/assets/af28e0c9-9301-481d-a116-4e230ff50b89)
+![image](https://github.com/user-attachments/assets/392336e5-7787-45c0-890b-1fdd057926c3)
 ![image](https://github.com/user-attachments/assets/c2e4a677-c00a-42cd-80ef-8a5deb43c2fb)
 ![image](https://github.com/user-attachments/assets/41ecbe88-ac74-47d0-a17d-02900b72c3ca)
 ![image](https://github.com/user-attachments/assets/0b656e3c-c3e1-4b7c-ac21-7fb4e61f3114)
